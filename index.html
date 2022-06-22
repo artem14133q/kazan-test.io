@@ -5,41 +5,55 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
     <script src="https://unpkg.com/vue@3"></script>
     <title>Test</title>
 </head>
 <body>
     <div id="app">
         <div class="container">
-            <div class="card mt-2">
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item">
-                        Всего <span class="font-weight-bold">{{ len }}</span> вопросов
-                    </li>
-                    <li class="list-group-item">
-                        <button class="btn btn-success" id="correct_answ_btn" @click="handleClick">Подсветка правильных ответов</button>
-                    </li>
-                </ul>
-            </div>
-            <div v-for="task in tasks" :key="task.hash">
-                <div class="card mt-2">
-                    <h6 class="card-header">{{ task.question }}:</h6>
-                    <ul class="list-group list-group-flush">
-                        <li v-for="(answer, index) in task.answers" class="list-group-item" :key="index">
-                            <span class="font-weight-bold">{{ index }}</span>.
-                            <span  
-                                class="ml-2"
-                                :class="{'badge badge-success': task.correct == index && showCorrect}" 
-                                :style="task.correct == index && showCorrect && styleObj">
-                                {{ answer }}
-                            </span>
-                        </li>
-                    </ul>
-                    <div class="card-footer">
-                        {{ task.hash }}
+            <div class="row">
+                <div class="pt-2" :class="{'col-9': windowMD, 'col-sm-11': windowSM}">
+                    <div v-for="task in tasks" :key="task.hash">
+                        <div class="card">
+                            <h6 class="card-header">{{ task.question }}:</h6>
+                            <ul class="list-group list-group-flush">
+                                <li
+                                    v-for="(answer, index) in task.answers"
+                                    class="list-group-item" 
+                                    :class="{'bg-success text-light': task.correct == index && showCorrect}"
+                                    :key="index">
+                                    <span class="font-weight-bold">{{ index }}</span>. {{ answer }}
+                                </li>
+                            </ul>
+                            <div class="card-footer">
+                                {{ task.hash }}
+                            </div>
+                        </div>
+                        <hr>
                     </div>
                 </div>
-                <hr>
+                <div :class="{'col-3': windowMD, 'col-sm-1': windowSM}">
+                    <div class="sticky-top pt-2">
+                        <div class="card" :class="{'d-none': windowSM || windowXS}">
+                            <li class="list-group-item">Всего <span class="font-weight-bold">{{ len }}</span> вопросов</li>
+                            <li class="list-group-item">
+                                <button class="btn btn-success w-100" @click="handleClick">Показать ответы</button>
+                            </li>
+                        </div>
+                        <div :class="{'d-none': !windowSM}" class="btn-group-vertical">
+                            <button class="btn btn-success" @click="handleClick"><i class="bi bi-eye"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row" :class="{'d-none': !windowXS}">
+                <nav class="navbar fixed-bottom navbar-light bg-dark">
+                    <span class="text-light">Всего <span class="font-weight-bold">{{ len }}</span> вопросов</span>
+                    <div class="btn-group">
+                        <button class="btn btn-success" @click="handleClick"><i class="bi bi-eye"></i></button>
+                    </div>
+                </nav>
             </div>
         </div>
     </div>
@@ -55,9 +69,11 @@
                 showCorrect: false,
                 tasks,
                 len: tasks.length,
-                styleObj: {
-                    'font-size': '14px',
-                }
+
+                windowWidth: window.innerWidth,
+                windowMD: false,
+                windowSM: false,
+                windowXS: false,
             }
         },
 
@@ -66,7 +82,26 @@
                 e.preventDefault();
                 
                 this.showCorrect = !this.showCorrect
+            },
+            onResize() {
+                this.windowWidth = window.innerWidth
+
+                this.windowMD = window.innerWidth >= 992
+                this.windowSM = window.innerWidth < 992 && window.innerWidth >= 768
+                this.windowXS = window.innerWidth < 768
             }
+        },
+
+        mounted() {
+            this.$nextTick(() => {
+                window.addEventListener('resize', this.onResize);
+            })
+
+            this.onResize()
+        },
+
+        beforeDestroy() { 
+            window.removeEventListener('resize', this.onResize); 
         }
     }).mount('#app')
 </script>
