@@ -4,53 +4,96 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/vue@3"></script>
     <title>Test</title>
 </head>
 <body>
     <div id="app">
         <div class="container">
-            <div class="row">
+            <div class="row mb-5">
                 <div class="pt-2" :class="{'col-9': windowMD, 'col-sm-11': windowSM}">
-                    <div 
-                        class="task card mb-2 border-dark"
-                        v-for="(task, taskIndex) in tasks"
-                        :key="task.hash">
-                        <h6 class="card-header">{{ task.question }}:</h6>
-                        <ul class="list-group list-group-flush">
-                            <li
-                                v-for="(answer, index) in task.answers"
-                                class="list-group-item" 
-                                :class="{'bg-success text-light': task.correct == index && showCorrect}"
-                                :key="index">
-                                <span class="font-weight-bold">{{ index }}</span>. {{ answer }}
-                            </li>
-                        </ul>
+                    <div v-for="(task, hash, taskIndex) in tasks">
+                        <div 
+                            class="task card mb-2 border-dark"
+                            v-if="(this.favorites.indexOf(hash) != -1) || !filterFavorites"
+                            :key="hash">
+                            <h6 class="card-header">{{ task.question }}:</h6>
+                            <ul class="list-group list-group-flush">
+                                <li
+                                    v-for="(answer, index) in task.answers"
+                                    class="list-group-item" 
+                                    :class="{'bg-success text-light': task.correct == index && (showCorrect || task.showCorrect)}"
+                                    :key="index">
+                                    <span class="fw-bold">{{ index }}</span>. {{ answer }}
+                                </li>
+                            </ul>
+                            <div class="card-footer d-flex justify-content-between">
+                                <div class="btn-group">
+                                    <button class="btn btn-primary" :title="hash" data-bs-toggle="tooltip" data-placement="bottom"><i class="bi bi-info-circle"></i></button>
+                                    <button
+                                        @click="e => switchFavorite(e, hash)"
+                                        class="btn btn-outline-primary"
+                                        :class="{'btn-primary text-light': this.favorites.indexOf(hash) != -1, 'disable-hover': !(this.favorites.indexOf(hash) != -1)}">
+                                        <i class="bi bi-star-fill"></i>
+                                    </button>
+                                </div>
+
+                                <button class="btn btn-primary" @click="e => showCorrectTask(e, hash)"><i class="bi bi-eye"></i></button>
+                            </div>
+                        </div>
                     </div>
+                    <h4 v-if="!this.favorites.length" class="text-center">Избранных нет</h4>
                 </div>
                 <div :class="{'col-3': windowMD, 'col-sm-1': windowSM}">
                     <div class="sticky-top pt-2" style="border: 0;">
                         <div class="card" :class="{'d-none': windowSM || windowXS}">
                             <ul class="list-group list-group-flush">
-                                <li class="list-group-item">Всего <span class="font-weight-bold">{{ len }}</span> вопросов</li>
+                                <li class="list-group-item">Всего <span class="fw-bold">{{ len }}</span> вопросов</li>
                                 <li class="list-group-item">
-                                    <button class="btn btn-success w-100" @click="handleClick">Показать ответы</button>
+                                    <button class="btn btn-primary w-100" @click="showCorrectAll">Показать ответы</button>
+                                </li>
+                                <li class="list-group-item">
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-primary position-relative w-100 mt-1"
+                                        @click="switchFilterFavorites"
+                                        :class="{'btn-primary text-light': filterFavorites, 'disable-hover': !filterFavorites}">
+                                        Избранное
+                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ favorites.length }}</span>
+                                    </button>
                                 </li>
                             </ul>
                         </div>
                         <div :class="{'d-none': !windowSM}" class="btn-group-vertical">
-                            <button class="btn btn-success" @click="handleClick"><i class="bi bi-eye"></i></button>
+                            <button
+                                type="button"
+                                class="btn btn-outline-primary position-relative mt-2"
+                                @click="switchFilterFavorites"
+                                :class="{'btn-primary': filterFavorites, 'disable-hover': !filterFavorites}">
+                                <i class="bi bi-star-fill"></i>
+                                <span class="position-absolute top-0 start-0 translate-middle badge rounded-pill bg-danger">{{ favorites.length }}</span>
+                            </button>
+                            <button class="btn btn-primary" @click="showCorrectAll"><i class="bi bi-eye"></i></button>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="row" :class="{'d-none': !windowXS}">
-                <nav class="navbar fixed-bottom navbar-light bg-dark">
+                <nav class="navbar fixed-bottom navbar-light bg-dark pt-3">
                     <span class="text-light">Всего <span class="font-weight-bold">{{ len }}</span> вопросов</span>
                     <div class="btn-group">
-                        <button class="btn btn-success" @click="handleClick"><i class="bi bi-eye"></i></button>
+                        <button
+                            type="button"
+                            class="btn btn-outline-primary position-relative text-light"
+                            @click="switchFilterFavorites"
+                            :class="{'btn-primary': filterFavorites, 'disable-hover': !filterFavorites}">
+                            <i class="bi bi-star-fill"></i>
+                            <span class="position-absolute top-0 start-0 translate-middle badge rounded-pill bg-danger">{{ favorites.length }}</span>
+                        </button>
+                        <button class="btn btn-primary" @click="showCorrectAll"><i class="bi bi-eye"></i></button>
                     </div>
                 </nav>
             </div>
@@ -67,20 +110,49 @@
             return {
                 showCorrect: false,
                 tasks,
-                len: tasks.length,
+                len: Object.keys(tasks).length,
+
+                filterFavorites: false,
 
                 windowWidth: window.innerWidth,
                 windowMD: false,
                 windowSM: false,
                 windowXS: false,
+
+                favorites: JSON.parse(localStorage.getItem('favorites') ?? '[]'),
             }
         },
 
         methods: {
-            handleClick(e) {
+            showCorrectAll(e) {
                 e.preventDefault();
                 
                 this.showCorrect = !this.showCorrect
+            },
+            switchFilterFavorites(e) {
+                e.preventDefault();
+
+                this.filterFavorites = !this.filterFavorites;
+            },
+            switchFavorite(e, hash) {
+                e.preventDefault();
+
+                let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+
+                if (favorites.indexOf(hash) != -1) {
+                    favorites = favorites.filter(h => h != hash);
+                } else {
+                    favorites.push(hash);
+                }
+
+                this.favorites = favorites
+
+                localStorage.setItem('favorites', JSON.stringify(favorites));
+            },
+            showCorrectTask(e, hash) {
+                e.preventDefault();
+
+                this.tasks[hash].showCorrect = !this.tasks[hash].showCorrect;
             },
             onResize() {
                 this.windowWidth = window.innerWidth
@@ -97,6 +169,12 @@
             })
 
             this.onResize()
+
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            })
         },
 
         beforeDestroy() { 
@@ -105,3 +183,10 @@
     }).mount('#app')
 </script>
 </html>
+
+<style>
+    .disable-hover:hover {
+        color: #0D6EFD;
+        background-color: transparent;
+    }
+</style>

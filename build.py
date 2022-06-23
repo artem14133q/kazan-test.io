@@ -1,9 +1,12 @@
+from curses.ascii import SI
 import re
 import json
 import hashlib
 
 TASK_REGEX = r'@\s+\d+\s*\n([^@]+)'
 ANSW_REGEX = r'^\s*(\w)\.\s*([^\n]+)'
+
+DEBUG_SIZE = 40
 
 EXCLUDE_LINES = [
     'Выполнен Баллов:',
@@ -133,7 +136,7 @@ for task in data:
     if uniqueTasks.get(hash):
         continue
 
-    task.update({'hash': hash})
+    task.update({'showCorrect': False})
 
     uniqueTasks.update({hash: task})
 
@@ -163,7 +166,7 @@ with open('index.template.html', 'r') as file:
     index = file.read()
 
 with open('index.html', 'w') as file:
-    file.write(index.replace('[[[]]]', json.dumps(list(uniqueTasks.values()), ensure_ascii=False)))
+    file.write(index.replace('[[[]]]', json.dumps(uniqueTasks, ensure_ascii=False)))
 
 with open('debug.json', 'w') as file:
     file.write(json.dumps(uniqueTasks, indent=4, ensure_ascii=False))
