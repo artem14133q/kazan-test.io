@@ -14,32 +14,31 @@
         <div class="container">
             <div class="row">
                 <div class="pt-2" :class="{'col-9': windowMD, 'col-sm-11': windowSM}">
-                    <div v-for="task in tasks" :key="task.hash">
-                        <div class="card">
-                            <h6 class="card-header">{{ task.question }}:</h6>
-                            <ul class="list-group list-group-flush">
-                                <li
-                                    v-for="(answer, index) in task.answers"
-                                    class="list-group-item" 
-                                    :class="{'bg-success text-light': task.correct == index && showCorrect}"
-                                    :key="index">
-                                    <span class="font-weight-bold">{{ index }}</span>. {{ answer }}
-                                </li>
-                            </ul>
-                            <div class="card-footer">
-                                {{ task.hash }}
-                            </div>
-                        </div>
-                        <hr>
+                    <div 
+                        class="task card mb-2 border-dark"
+                        v-for="(task, taskIndex) in tasks"
+                        :key="task.hash">
+                        <h6 class="card-header">{{ task.question }}:</h6>
+                        <ul class="list-group list-group-flush">
+                            <li
+                                v-for="(answer, index) in task.answers"
+                                class="list-group-item" 
+                                :class="{'bg-success text-light': task.correct == index && showCorrect}"
+                                :key="index">
+                                <span class="font-weight-bold">{{ index }}</span>. {{ answer }}
+                            </li>
+                        </ul>
                     </div>
                 </div>
                 <div :class="{'col-3': windowMD, 'col-sm-1': windowSM}">
-                    <div class="sticky-top pt-2">
+                    <div class="sticky-top pt-2" style="border: 0;">
                         <div class="card" :class="{'d-none': windowSM || windowXS}">
-                            <li class="list-group-item">Всего <span class="font-weight-bold">{{ len }}</span> вопросов</li>
-                            <li class="list-group-item">
-                                <button class="btn btn-success w-100" @click="handleClick">Показать ответы</button>
-                            </li>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">Всего <span class="font-weight-bold">{{ len }}</span> вопросов</li>
+                                <li class="list-group-item">
+                                    <button class="btn btn-success w-100" @click="handleClick">Показать ответы</button>
+                                </li>
+                            </ul>
                         </div>
                         <div :class="{'d-none': !windowSM}" class="btn-group-vertical">
                             <button class="btn btn-success" @click="handleClick"><i class="bi bi-eye"></i></button>

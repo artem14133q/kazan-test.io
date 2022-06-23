@@ -7,7 +7,7 @@ ANSW_REGEX = r'^\s*(\w)\.\s*([^\n]+)'
 
 EXCLUDE_LINES = [
     'Выполнен Баллов:',
-    'ДО в Казанском ГМУ',
+    'ДО в Казанском',
     'Зкзамен по дисциплине',
     'https',
     'Поиск',
@@ -17,15 +17,37 @@ EXCLUDE_LINES = [
     'Отзыв',
     'р р р фр',
     'Текст вопроса',
-    'Нет ответа Балл',
+    'Нет ответа',
+    'Балл',
     'Баллов',
     'Сводка хранения данных',
     'Скачать мобильное приложение',
+    'р р ду',
     'Стр.',
+    'Снять флажок',
+    'у ц д у',
+    'Закончить обзор',
+    'Сбросить тур для пользователя на этой странице',
+    'р у ф р',
+    'В Б 1 00 1 00',
+    'е о е а а ,00',
+    'о е а о ,00 з ,00',
+    'Д р ц у',
+    'Н Б 1 00',
+    'Н б й б й',
+    'Д р ру фр р',
+    'р р р д д фр',
+    'П й й б',
+    'р р у рр у',
+    'р у р',
+    'о рос 38',
 ]
 
 with open('obschiy.txt', 'r') as file:
     CONTENT = file.read()
+
+with open('obschiy1.txt', 'r') as file:
+    CONTENT += file.read()
 
 CONTENT = CONTENT.replace('Вопрос', '@')
 
@@ -54,23 +76,21 @@ def filter_lines(lines: list) -> list:
 for task in tasks:
     taskData = { 'answers': {} }
 
-    firstAnswer = False
+    lines = filter_lines(task.split('\n'))
 
-    lines = filter_lines(task.split('\n')[1:])
+    answs = re.findall(ANSW_REGEX, '\n'.join(lines), re.MULTILINE)
+
+    for answ in answs:
+        taskData['answers'][answ[0]] = answ[1].split(';')[0].strip()
 
     for i, line in enumerate(lines):
-        if (matches := re.findall(ANSW_REGEX, line)) and len(matches):
-            taskData['answers'][matches[0][0]] = matches[0][1].split(';')[0].strip()
-
-            if firstAnswer is False:
-                firstAnswer = i
-
-        elif 'Правильный ответ:' in line:
+        if 'Правильный ответ:' in line:
             taskData['correct'] = line.split(':', 1)[1].split(';')[0].strip()
 
     for key, answer in taskData['answers'].items():
         if answer == taskData['correct']:
             taskData['correct'] = key
+            break
 
     if not len(taskData['answers']):
         continue
